@@ -1,22 +1,46 @@
 {
-  "name": "@vue-mcp-next/monorepo",
-  "version": "0.1.0",
-  "description": "Vue MCP Next - A modern Vue.js Model Context Protocol implementation",
-  "private": true,
+  "name": "vue-mcp-next",
+  "version": "0.5.0",
+  "description": "Vue MCP Next - A modern Vue.js Model Context Protocol implementation for Vue.js applications",
   "type": "module",
-  "workspaces": [
-    "packages/*",
-    "playground",
-    "examples/*"
+  "private": false,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "import": "./dist/plugin.js"
+    },
+    "./core": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "package.json"
   ],
   "packageManager": "pnpm@9.0.0",
-      "engines": {
+  "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "build": "pnpm -r --filter='./packages/*' build",
-    "build:all": "pnpm -r build",
+    "build": "pnpm run build:clean && pnpm run build:packages && pnpm run build:typecheck && pnpm run build:bundle && pnpm run build:verify",
+    "build:clean": "rm -rf dist && pnpm -r --filter='./packages/*' clean",
+    "build:typecheck": "pnpm -r typecheck",
+    "build:packages": "node scripts/build-packages.mjs", 
+    "build:bundle": "tsup",
+    "build:verify": "node scripts/verify-build.mjs",
+    "build:all": "pnpm run build:packages && pnpm run build",
     "dev": "pnpm -r --parallel dev",
     "dev:core": "pnpm --filter='@vue-mcp-next/core' dev",
     "dev:plugin": "pnpm --filter='@vue-mcp-next/plugin' dev",
@@ -29,22 +53,37 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r typecheck",
-    "clean": "pnpm -r clean && rm -rf node_modules/.pnpm",
-    "clean:dist": "pnpm -r --filter='./packages/*' clean",
+    "clean": "pnpm -r clean && rm -rf node_modules/.pnpm && rm -rf dist",
+    "clean:dist": "pnpm -r --filter='./packages/*' clean && rm -rf dist",
     "release": "changeset publish",
     "version": "changeset version",
     "preview": "pnpm --filter='playground' preview",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "prepublishOnly": "pnpm run build:all"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.3",
+    "@vue/devtools-kit": "^7.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.0",
+    "nanoid": "^5.0.0",
+    "zod": "^3.23.8"
+  },
+  "peerDependencies": {
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0",
+    "vue": "^3.4.0"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.0",
     "@changesets/cli": "^2.27.1",
     "@eslint/js": "^9.0.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "@playwright/test": "^1.40.0",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.40.0",
     "@typescript-eslint/parser": "^8.40.0",
     "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/devtools-kit": "^7.0.0",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/test-utils": "^2.4.0",
@@ -54,10 +93,12 @@
     "jsdom": "^26.1.0",
     "lint-staged": "^16.1.5",
     "prettier": "^3.6.2",
+    "tsup": "^8.5.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.3",
     "vitest": "^3.2.4",
-    "vue": "^3.5.18"
+    "vue": "^3.5.18",
+    "zod": "^3.22.0"
   },
   "pnpm": {
     "overrides": {

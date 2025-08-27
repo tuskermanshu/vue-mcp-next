@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Vue MCP Next playground for development and testing",
   "type": "module",
-  "private": true,
+  "private": false,
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",

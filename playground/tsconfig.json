@@ -4,7 +4,9 @@
   "compilerOptions": {
     "composite": true,
     "jsx": "preserve",
-    "jsxImportSource": "vue"
+    "jsxImportSource": "vue",
+    "allowImportingTsExtensions": false,
+    "noEmit": true
   },
   "include": [
     "src/**/*",

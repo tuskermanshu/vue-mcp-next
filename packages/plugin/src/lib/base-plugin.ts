@@ -84,6 +84,16 @@ export class VueMcpBasePlugin {
   }
 
   /**
+   * 获取 Overlay 脚本 - 直接加载客户端
+   */
+  getOverlayScript(): string {
+    return `// Vue MCP Overlay - 加载客户端
+import('virtual:vue-mcp-client')
+  .then(() => console.log('[Vue MCP] Client loaded'))
+  .catch(err => console.error('[Vue MCP] Failed to load client:', err))`
+  }
+
+  /**
    * 获取中间件处理函数（用于处理MCP相关请求）
    */
   getMiddleware() {
@@ -134,12 +144,12 @@ export class VueMcpBasePlugin {
     return `// Vue MCP Client - 使用 Vite 内置 HMR + DevTools Kit
 import { devtools, devtoolsRouterInfo, devtoolsState, getInspector, stringify, toggleHighPerfMode } from '@vue/devtools-kit'
 
-
 const PINIA_INSPECTOR_ID = 'pinia'
 const COMPONENTS_INSPECTOR_ID = 'components'
 
 // 初始化 DevTools
 devtools.init()
+console.log('[Vue MCP] DevTools Kit loaded successfully')
 
 let highlightComponentTimeout = null
 

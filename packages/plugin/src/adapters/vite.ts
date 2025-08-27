@@ -6,6 +6,8 @@ import { createDevToolsBridge } from '../lib/devtools-bridge.js'
 // 虚拟模块标识符
 const VIRTUAL_CLIENT_MODULE = 'virtual:vue-mcp-client'
 const RESOLVED_VIRTUAL_CLIENT_MODULE = '\0' + VIRTUAL_CLIENT_MODULE
+const VIRTUAL_OVERLAY_MODULE = 'virtual:vue-mcp-overlay'
+const RESOLVED_VIRTUAL_OVERLAY_MODULE = '\0' + VIRTUAL_OVERLAY_MODULE
 
 /**
  * Vite适配器 - 将Vue MCP集成到Vite构建工具中
@@ -31,12 +33,18 @@ export function vueMcpVitePlugin(options: VueMcpOptions = {
       if (id === VIRTUAL_CLIENT_MODULE) {
         return RESOLVED_VIRTUAL_CLIENT_MODULE
       }
+      if (id === VIRTUAL_OVERLAY_MODULE) {
+        return RESOLVED_VIRTUAL_OVERLAY_MODULE
+      }
     },
 
     // 加载虚拟模块内容
     load(id: string) {
       if (id === RESOLVED_VIRTUAL_CLIENT_MODULE) {
         return basePlugin.getClientInjectionScript()
+      }
+      if (id === RESOLVED_VIRTUAL_OVERLAY_MODULE) {
+        return basePlugin.getOverlayScript()
       }
     },
     
@@ -90,7 +98,7 @@ export function vueMcpVitePlugin(options: VueMcpOptions = {
     },
 
     transformIndexHtml() {
-      // 使用虚拟模块注入而不是直接 HTML 注入
+      // 注入 overlay 脚本，它会处理依赖检查和加载
       return {
         html: '',
         tags: [
@@ -99,7 +107,7 @@ export function vueMcpVitePlugin(options: VueMcpOptions = {
             injectTo: 'head-prepend',
             attrs: {
               type: 'module',
-              src: `${config.base || '/'}@id/${VIRTUAL_CLIENT_MODULE}`,
+              src: `${config.base || '/'}@id/${VIRTUAL_OVERLAY_MODULE}`,
             },
           },
         ],

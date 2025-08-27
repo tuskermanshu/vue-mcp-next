@@ -8,7 +8,8 @@
     "rootDir": "src",
     "noEmit": false,
     "allowImportingTsExtensions": false,
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
+    "emitDeclarationOnly": false,
     "module": "ESNext",
     "target": "ES2020"
   },

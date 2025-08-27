@@ -5,6 +5,10 @@
 vue-mcp-next.md
 
 node_modules
+dist
 
 */*/dist
 */*/node_modules
+
+packages/*/*.js
+playground/*/*.js

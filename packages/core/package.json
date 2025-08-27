@@ -1,0 +1,53 @@
+{
+  "name": "@vue-mcp-next/core",
+  "version": "0.1.0",
+  "description": "Core MCP implementation for Vue.js",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.3",
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "nanoid": "^5.0.0",
+    "zod": "^3.23.8"
+  },
+  "peerDependencies": {
+    "vue": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/express": "^4.17.0",
+    "@types/cors": "^2.8.0",
+    "@vue/test-utils": "^2.4.0",
+    "typescript": "^5.6.0"
+  },
+  "keywords": [
+    "vue",
+    "mcp",
+    "core",
+    "model-context-protocol"
+  ],
+  "author": "Vue MCP Team",
+  "license": "MIT"
+}

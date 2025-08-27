@@ -1,0 +1,62 @@
+{
+  "name": "@vue-mcp-next/plugin",
+  "version": "0.1.0",
+  "description": "Vue MCP plugin for Vite and other build tools",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js", 
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch", 
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@vue-mcp-next/core": "workspace:*",
+    "@vue/devtools-kit": "^7.0.0"
+  },
+  "peerDependencies": {
+    "vue": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    },
+    "webpack": {
+      "optional": true
+    },
+    "@farmfe/core": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.6.0",
+    "vite": " ^6.0.0",
+    "vue": "^3.5.0"
+  },
+  "keywords": [
+    "vue",
+    "mcp",
+    "plugin",
+    "vite",
+    "build-tool"
+  ],
+  "author": "Vue MCP Team",
+  "license": "MIT"
+}

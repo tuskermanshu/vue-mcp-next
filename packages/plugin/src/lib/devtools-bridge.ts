@@ -1,5 +1,7 @@
 import type { ViteDevServer } from 'vite'
 import type { VueAppBridge, ComponentSelector, ComponentNode, ComponentState, StatePatch, RouterInfo, PiniaState } from '@vue-mcp-next/core'
+import { NETWORK_CONSTANTS, LOG_PREFIXES, ERROR_MESSAGES } from './constants.js'
+import { generateRequestId, createTimeoutPromise, ResourceManager } from './utils.js'
 
 /**
  * 统一的 Vite DevTools Bridge 实现
@@ -9,44 +11,55 @@ export class ViteDevToolsBridge implements VueAppBridge {
   private viteServer: ViteDevServer
   private clientReady = false
   private pendingRequests = new Map<string, { resolve: Function, reject: Function, timeout: NodeJS.Timeout }>()
-  private messageId = 0
+  private resourceManager = new ResourceManager()
 
   constructor(viteServer: ViteDevServer) {
     this.viteServer = viteServer
     this.setupViteWebSocket()
   }
 
-  private setupViteWebSocket() {
+  private setupViteWebSocket(): void {
     if (!this.viteServer?.ws) {
-      console.warn('[ViteDevToolsBridge] Vite WebSocket server not available')
+      console.warn(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Vite WebSocket server not available`)
       return
     }
 
-
     // 监听客户端连接
     this.viteServer.ws.on('connection', () => {
+      console.log(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Client connected`)
     })
 
     // 监听 Vue MCP 客户端就绪信号
     this.viteServer.ws.on('vue-mcp:client-ready', (data: any) => {
-      this.clientReady = true
+      this.handleClientReady(data)
     })
 
-    // 监听客户端响应 (通过 custom 事件)
+    // 监听客户端响应
     this.viteServer.ws.on('vue-mcp:response', (data: any) => {
       this.handleClientResponse(data)
     })
 
-    // 监听客户端错误 (通过 custom 事件)
+    // 监听客户端错误
     this.viteServer.ws.on('vue-mcp:error', (data: any) => {
       this.handleClientError(data)
     })
-
   }
 
-  private handleClientResponse(data: any) {
+  private handleClientReady(data: any): void {
+    this.clientReady = true
+    console.log(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Client ready:`, {
+      devtoolsAvailable: data?.devtoolsAvailable,
+      fallback: data?.fallback
+    })
+  }
+
+  private handleClientResponse(data: any): void {
+    if (!data || typeof data.requestId !== 'string') {
+      console.warn(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Invalid response data:`, data)
+      return
+    }
+
     const { requestId, result } = data
-    
     const pending = this.pendingRequests.get(requestId)
     
     if (pending) {
@@ -54,20 +67,25 @@ export class ViteDevToolsBridge implements VueAppBridge {
       this.pendingRequests.delete(requestId)
       pending.resolve(result)
     } else {
-      console.warn(`[ViteDevToolsBridge] Received response for unknown request: ${requestId}`)
+      console.warn(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Received response for unknown request: ${requestId}`)
     }
   }
 
-  private handleClientError(data: any) {
+  private handleClientError(data: any): void {
+    if (!data || typeof data.requestId !== 'string') {
+      console.warn(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Invalid error data:`, data)
+      return
+    }
+
     const { requestId, error } = data
     const pending = this.pendingRequests.get(requestId)
     
     if (pending) {
       clearTimeout(pending.timeout)
       this.pendingRequests.delete(requestId)
-      pending.reject(new Error(error))
+      pending.reject(new Error(error || 'Unknown client error'))
     } else {
-      console.warn(`[ViteDevToolsBridge] Received error for unknown request: ${requestId}`)
+      console.warn(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Received error for unknown request: ${requestId}`)
     }
   }
 
@@ -80,25 +98,27 @@ export class ViteDevToolsBridge implements VueAppBridge {
   }
 
   async sendCommand(method: string, params?: any): Promise<any> {
-    
+    if (!method || typeof method !== 'string') {
+      throw new Error('Method name is required and must be a string')
+    }
+
     if (!this.viteServer?.ws) {
-      throw new Error('Vite WebSocket server not available')
+      throw new Error(ERROR_MESSAGES.WEBSOCKET_NOT_AVAILABLE)
     }
 
     if (!this.clientReady) {
-      console.error('[ViteDevToolsBridge] Client not ready, current status:', this.clientReady)
-      throw new Error('Vue MCP client not ready. Make sure the browser has the Vue DevTools and the client script is loaded.')
+      console.error(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Client not ready, current status:`, this.clientReady)
+      throw new Error(ERROR_MESSAGES.CLIENT_NOT_READY)
     }
 
-    return new Promise((resolve, reject) => {
-      const requestId = `req_${++this.messageId}_${Date.now()}`
-      
+    const requestId = generateRequestId()
+    const commandPromise = new Promise((resolve, reject) => {
       // 设置超时
       const timeout = setTimeout(() => {
-        console.error(`[ViteDevToolsBridge] Request ${method} (${requestId}) timed out after 10000ms`)
+        console.error(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Request ${method} (${requestId}) timed out after ${NETWORK_CONSTANTS.REQUEST_TIMEOUT}ms`)
         this.pendingRequests.delete(requestId)
-        reject(new Error(`Request ${method} timed out after 10000ms`))
-      }, 10000)
+        reject(new Error(`${ERROR_MESSAGES.REQUEST_TIMEOUT}: ${method}`))
+      }, NETWORK_CONSTANTS.REQUEST_TIMEOUT)
       
       // 存储请求信息
       this.pendingRequests.set(requestId, { resolve, reject, timeout })
@@ -113,12 +133,14 @@ export class ViteDevToolsBridge implements VueAppBridge {
         this.viteServer.ws.send('vue-mcp:command', commandData)
         
       } catch (error) {
-        console.error(`[ViteDevToolsBridge] Failed to send command:`, error)
+        console.error(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Failed to send command:`, error)
         clearTimeout(timeout)
         this.pendingRequests.delete(requestId)
         reject(error)
       }
     })
+
+    return createTimeoutPromise(commandPromise, NETWORK_CONSTANTS.REQUEST_TIMEOUT)
   }
 
   async getComponentTree(): Promise<ComponentNode[]> {
@@ -150,34 +172,88 @@ export class ViteDevToolsBridge implements VueAppBridge {
   }
 
   cleanup(): void {
-    // 清理所有未完成的请求
-    for (const [, pending] of this.pendingRequests) {
-      clearTimeout(pending.timeout)
-      pending.reject(new Error('ViteDevToolsBridge shutting down'))
+    try {
+      // 清理所有未完成的请求
+      for (const [, pending] of this.pendingRequests) {
+        clearTimeout(pending.timeout)
+        pending.reject(new Error('ViteDevToolsBridge shutting down'))
+      }
+      this.pendingRequests.clear()
+      
+      // 清理资源管理器中的资源
+      this.resourceManager.cleanup()
+      
+      this.clientReady = false
+      console.log(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Cleanup completed`)
+    } catch (error) {
+      console.error(`${LOG_PREFIXES.DEVTOOLS_BRIDGE} Error during cleanup:`, error)
     }
-    this.pendingRequests.clear()
-    this.clientReady = false
   }
 }
 
 /**
- * 创建适合不同构建工具的Bridge实例 - 目前只支持 Vite
+ * Bridge工厂接口
+ */
+interface BridgeFactory {
+  create(serverContext: any): VueAppBridge
+  validate(serverContext: any): boolean
+}
+
+/**
+ * Vite Bridge工厂
+ */
+class ViteBridgeFactory implements BridgeFactory {
+  create(serverContext: any): VueAppBridge {
+    return new ViteDevToolsBridge(serverContext)
+  }
+
+  validate(serverContext: any): boolean {
+    return !!(serverContext && serverContext.ws)
+  }
+}
+
+/**
+ * Bridge工厂注册表
+ */
+const bridgeFactories = new Map<string, BridgeFactory>([
+  ['vite', new ViteBridgeFactory()]
+])
+
+/**
+ * 创建适合不同构建工具的Bridge实例
  */
 export function createDevToolsBridge(buildTool: string, serverContext?: any): VueAppBridge {
-  switch (buildTool) {
-    case 'vite':
-      if (!serverContext) {
-        throw new Error('Vite server context is required for Vite DevTools bridge')
-      }
-      return new ViteDevToolsBridge(serverContext)
-    
-    case 'webpack':
-      throw new Error('Webpack DevTools bridge not implemented yet')
-      
-    case 'farm':
-      throw new Error('Farm DevTools bridge not implemented yet')
-      
-    default:
-      throw new Error(`Unsupported build tool: ${buildTool}`)
+  if (!buildTool || typeof buildTool !== 'string') {
+    throw new Error('Build tool name is required')
   }
+
+  const factory = bridgeFactories.get(buildTool.toLowerCase())
+  if (!factory) {
+    const supportedTools = Array.from(bridgeFactories.keys()).join(', ')
+    throw new Error(`Unsupported build tool: ${buildTool}. Supported: ${supportedTools}`)
+  }
+
+  if (!serverContext) {
+    throw new Error(`${buildTool} server context is required for DevTools bridge`)
+  }
+
+  if (!factory.validate(serverContext)) {
+    throw new Error(`Invalid server context for ${buildTool} bridge`)
+  }
+
+  return factory.create(serverContext)
+}
+
+/**
+ * 注册新的Bridge工厂（用于扩展支持）
+ */
+export function registerBridgeFactory(buildTool: string, factory: BridgeFactory): void {
+  bridgeFactories.set(buildTool.toLowerCase(), factory)
+}
+
+/**
+ * 获取支持的构建工具列表
+ */
+export function getSupportedBuildTools(): string[] {
+  return Array.from(bridgeFactories.keys())
 }

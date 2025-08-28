@@ -2,145 +2,201 @@ import type { Plugin, ResolvedConfig } from 'vite'
 import type { VueMcpOptions } from '@vue-mcp-next/core'
 import { VueMcpBasePlugin } from '../lib/base-plugin.js'
 import { createDevToolsBridge } from '../lib/devtools-bridge.js'
-
-// 虚拟模块标识符
-const VIRTUAL_CLIENT_MODULE = 'virtual:vue-mcp-client'
-const RESOLVED_VIRTUAL_CLIENT_MODULE = '\0' + VIRTUAL_CLIENT_MODULE
-const VIRTUAL_OVERLAY_MODULE = 'virtual:vue-mcp-overlay'
-const RESOLVED_VIRTUAL_OVERLAY_MODULE = '\0' + VIRTUAL_OVERLAY_MODULE
+import { VIRTUAL_MODULES, LOG_PREFIXES, DEFAULT_CONFIG } from '../lib/constants.js'
+import { ResourceManager } from '../lib/utils.js'
 
 /**
  * Vite适配器 - 将Vue MCP集成到Vite构建工具中
  */
-export function vueMcpVitePlugin(options: VueMcpOptions = {
-  context: undefined
-}): Plugin {
+export function vueMcpVitePlugin(options: VueMcpOptions = {}): Plugin {
   const basePlugin = new VueMcpBasePlugin(options)
+  const resourceManager = new ResourceManager()
   let bridge: any = null
   let config: ResolvedConfig
+  let isInitialized = false
 
   return {
     name: 'vue-mcp-vite',
-    apply: 'serve', // 仅在开发模式下应用
-    enforce: 'pre', // 确保在其他插件之前运行
+    apply: 'serve',
+    enforce: 'pre',
     
     configResolved(resolvedConfig) {
       config = resolvedConfig
+      console.log(`${LOG_PREFIXES.VITE_PLUGIN} Config resolved for mode: ${config.mode}`)
     },
 
-    // 解析虚拟模块
     resolveId(id: string) {
-      if (id === VIRTUAL_CLIENT_MODULE) {
-        return RESOLVED_VIRTUAL_CLIENT_MODULE
+      if (id === VIRTUAL_MODULES.CLIENT) {
+        return VIRTUAL_MODULES.RESOLVED_CLIENT
       }
-      if (id === VIRTUAL_OVERLAY_MODULE) {
-        return RESOLVED_VIRTUAL_OVERLAY_MODULE
+      if (id === VIRTUAL_MODULES.OVERLAY) {
+        return VIRTUAL_MODULES.RESOLVED_OVERLAY
       }
     },
 
-    // 加载虚拟模块内容
     load(id: string) {
-      if (id === RESOLVED_VIRTUAL_CLIENT_MODULE) {
-        return basePlugin.getClientInjectionScript()
-      }
-      if (id === RESOLVED_VIRTUAL_OVERLAY_MODULE) {
-        return basePlugin.getOverlayScript()
+      try {
+        if (id === VIRTUAL_MODULES.RESOLVED_CLIENT) {
+          return basePlugin.getClientInjectionScript()
+        }
+        if (id === VIRTUAL_MODULES.RESOLVED_OVERLAY) {
+          return basePlugin.getOverlayScript()
+        }
+      } catch (error) {
+        console.error(`${LOG_PREFIXES.VITE_PLUGIN} Failed to load virtual module:`, error)
+        return null
       }
     },
     
     async configureServer(server) {
       try {
-        
-        // 创建统一的 DevTools 桥接
-        bridge = createDevToolsBridge('vite', server)
+        if (isInitialized) {
+          console.warn(`${LOG_PREFIXES.VITE_PLUGIN} Already initialized, skipping`)
+          return
+        }
+
+        // 创建 DevTools 桥接
+        bridge = createDevToolsBridge(DEFAULT_CONFIG.BUILD_TOOL, server)
         
         // 设置桥接
         basePlugin.setBridge(bridge)
         
-        // 使用基础插件初始化
+        // 初始化基础插件
         await basePlugin.initialize({
           server,
           config: {
             root: server.config.root,
-            mode: server.config.mode || 'development',
-            command: server.config.command || 'serve'
+            mode: (server.config.mode as "development" | "production" | "test") || DEFAULT_CONFIG.MODE,
+            command: server.config.command || DEFAULT_CONFIG.COMMAND
           }
         })
 
         // 添加中间件
         server.middlewares.use(basePlugin.getMiddleware())
         
+        // WebSocket 错误处理
+        const wsErrorHandler = (error: Error) => {
+          console.error(`${LOG_PREFIXES.VITE_PLUGIN} WebSocket error:`, error)
+        }
+        server.ws.on('error', wsErrorHandler)
+        resourceManager.add(() => {
+          server.ws.off('error', wsErrorHandler)
+        })
+
+        // 注册优雅关闭处理
+        registerShutdownHandlers()
         
-        // 错误处理
-        server.ws.on('error', (error) => {
-          console.error('[VitePlugin] WebSocket error:', error)
-        })
-
-        // 优雅关闭处理
-        process.on('SIGINT', () => {
-          if (bridge) {
-            bridge.cleanup()
-          }
-          basePlugin.cleanup()
-        })
-
-        process.on('SIGTERM', () => {
-          if (bridge) {
-            bridge.cleanup()
-          }
-          basePlugin.cleanup()
-        })
+        isInitialized = true
+        console.log(`${LOG_PREFIXES.VITE_PLUGIN} Successfully configured for Vite server`)
         
       } catch (error) {
-        console.error('[VitePlugin] Failed to configure Vue MCP server:', error)
+        console.error(`${LOG_PREFIXES.VITE_PLUGIN} Failed to configure server:`, error)
         // 继续启动 Vite，但禁用 MCP 功能
+        cleanup()
       }
     },
 
     transformIndexHtml() {
-      // 注入 overlay 脚本，它会处理依赖检查和加载
-      return {
-        html: '',
-        tags: [
-          {
-            tag: 'script',
-            injectTo: 'head-prepend',
-            attrs: {
-              type: 'module',
-              src: `${config.base || '/'}@id/${VIRTUAL_OVERLAY_MODULE}`,
+      try {
+        if (!isInitialized) {
+          console.warn(`${LOG_PREFIXES.VITE_PLUGIN} Not initialized, skipping HTML transform`)
+          return
+        }
+
+        const baseUrl = config?.base || '/'
+        const overlayUrl = `${baseUrl}@id/${VIRTUAL_MODULES.OVERLAY}`
+
+        return {
+          html: '',
+          tags: [
+            {
+              tag: 'script',
+              injectTo: 'head-prepend',
+              attrs: {
+                type: 'module',
+                src: overlayUrl,
+              },
             },
-          },
-        ],
+          ],
+        }
+      } catch (error) {
+        console.error(`${LOG_PREFIXES.VITE_PLUGIN} Failed to transform HTML:`, error)
+        return
       }
     },
 
     transform(code, id) {
+      if (!isInitialized) {
+        return null
+      }
+
       try {
         const [filename] = id.split('?', 2)
         return basePlugin.transformCode(code, filename)
       } catch (error) {
-        console.error('[VitePlugin] Failed to transform code:', error)
+        console.error(`${LOG_PREFIXES.VITE_PLUGIN} Failed to transform code for ${id}:`, error)
         return null
       }
     },
 
     buildStart() {
-    },
-
-    buildEnd() {
-      try {
-        if (bridge) {
-          bridge.cleanup()
-        }
-        basePlugin.cleanup()
-      } catch (error) {
-        console.error('[VitePlugin] Cleanup error:', error)
+      if (isInitialized) {
+        console.log(`${LOG_PREFIXES.VITE_PLUGIN} Build started`)
       }
     },
 
+    buildEnd() {
+      cleanup()
+    },
+
     closeBundle() {
+      cleanup()
     }
   }
+
+  // Helper functions for the plugin
+  function cleanup() {
+    try {
+      if (bridge) {
+        bridge.cleanup()
+        bridge = null
+      }
+      basePlugin.cleanup()
+      resourceManager.cleanup()
+      isInitialized = false
+      console.log(`${LOG_PREFIXES.VITE_PLUGIN} Cleanup completed`)
+    } catch (error) {
+      console.error(`${LOG_PREFIXES.VITE_PLUGIN} Cleanup error:`, error)
+    }
+  }
+
+  function registerShutdownHandlers() {
+    const shutdownHandler = () => cleanup()
+    
+    process.on('SIGINT', shutdownHandler)
+    process.on('SIGTERM', shutdownHandler)
+    process.on('exit', shutdownHandler)
+    
+    resourceManager.add(() => {
+      process.off('SIGINT', shutdownHandler)
+      process.off('SIGTERM', shutdownHandler)
+      process.off('exit', shutdownHandler)
+    })
+  }
+}
+
+/**
+ * 检查是否为开发环境
+ */
+export function isDevelopmentMode(config?: ResolvedConfig): boolean {
+  return config?.mode === 'development' || config?.command === 'serve'
+}
+
+/**
+ * 获取虚拟模块的完整 URL
+ */
+export function getVirtualModuleUrl(moduleName: string, baseUrl = '/'): string {
+  return `${baseUrl}@id/${moduleName}`
 }
 
 // 默认导出

@@ -6,6 +6,16 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js'
 
+// 常量定义
+const CONSTANTS = {
+  INSPECTOR_START_TIMEOUT: 10000, // 10秒
+  INSPECTOR_KILL_TIMEOUT: 2000,   // 2秒
+  AUTH_TOKEN_BYTES: 32,
+  JSON_LIMIT: '10mb',
+  SESSION_TIMEOUT: 30 * 60 * 1000, // 30分钟
+  CLEANUP_INTERVAL: 5 * 60 * 1000  // 5分钟
+} as const
+
 export interface VueMcpHttpServerOptions {
   port: number
   cors?: boolean
@@ -33,10 +43,11 @@ export class VueMcpHttpServer {
   private mcpServer: McpServer
   private options: VueMcpHttpServerOptions
   private httpServer?: any
-  private transports: { [sessionId: string]: StreamableHTTPServerTransport } = {}
+  private transports: { [sessionId: string]: { transport: StreamableHTTPServerTransport, lastActive: Date } } = {}
   private serverInfo: { name: string; version: string }
   private authToken: string
   private inspectorProcess?: ChildProcess  // Inspector 进程
+  private cleanupTimer?: NodeJS.Timeout   // 清理定时器
 
   constructor(mcpServer: McpServer, options: VueMcpHttpServerOptions) {
     this.mcpServer = mcpServer
@@ -67,7 +78,7 @@ export class VueMcpHttpServer {
     
     this.app = express()
 
-    this.app.use((req, res, next) => {
+    this.app.use((_req, res, next) => {
       res.header("Access-Control-Expose-Headers", "mcp-session-id");
       next();
     });
@@ -94,7 +105,7 @@ export class VueMcpHttpServer {
    * 生成认证token
    */
   private generateAuthToken(): string {
-    return randomBytes(32).toString('hex')
+    return randomBytes(CONSTANTS.AUTH_TOKEN_BYTES).toString('hex')
   }
 
   /**
@@ -185,7 +196,7 @@ export class VueMcpHttpServer {
             console.log('⚠️  Inspector startup timeout, but it may still be starting...')
             resolve() // 不阻塞主服务器启动
           }
-        }, 10000) // 10秒超时
+        }, CONSTANTS.INSPECTOR_START_TIMEOUT)
 
       } catch (error) {
         console.error('[Inspector] Failed to start:', error)
@@ -253,13 +264,13 @@ export class VueMcpHttpServer {
         // 优雅关闭
         this.inspectorProcess.kill('SIGTERM')
         
-        // 如果 2 秒后还没关闭，强制杀死
+        // 如果超时后还没关闭，强制杀死
         setTimeout(() => {
           if (this.inspectorProcess && !this.inspectorProcess.killed) {
             console.log('🔍 Force killing Inspector process...')
             this.inspectorProcess.kill('SIGKILL')
           }
-        }, 2000)
+        }, CONSTANTS.INSPECTOR_KILL_TIMEOUT)
         
       } catch (error) {
         console.error('Error stopping Inspector:', error)
@@ -282,7 +293,7 @@ export class VueMcpHttpServer {
     }
 
     // JSON解析
-    this.app.use(express.json({ limit: '10mb' }))
+    this.app.use(express.json({ limit: CONSTANTS.JSON_LIMIT }))
 
     // 日志中间件
     this.app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -299,7 +310,9 @@ export class VueMcpHttpServer {
         let transport: StreamableHTTPServerTransport
 
         if (sessionId && this.transports[sessionId]) {
-          transport = this.transports[sessionId]
+          const sessionData = this.transports[sessionId]
+          transport = sessionData.transport
+          sessionData.lastActive = new Date()
           console.log(`[MCP] Reusing existing session: ${sessionId}`)
         } else if (!sessionId && isInitializeRequest(req.body)) {
           console.log('[MCP] Creating new session for initialize request')
@@ -307,7 +320,10 @@ export class VueMcpHttpServer {
           transport = new StreamableHTTPServerTransport({
             sessionIdGenerator: () => randomUUID(),
             onsessioninitialized: (sessionId) => {
-              this.transports[sessionId] = transport
+              this.transports[sessionId] = {
+                transport,
+                lastActive: new Date()
+              }
               console.log(`[MCP] Session initialized: ${sessionId}`)
             },
             enableDnsRebindingProtection: this.options.enableDnsRebindingProtection,
@@ -328,7 +344,10 @@ export class VueMcpHttpServer {
           transport = new StreamableHTTPServerTransport({
             sessionIdGenerator: () => randomUUID(),
             onsessioninitialized: (sessionId) => {
-              this.transports[sessionId] = transport
+              this.transports[sessionId] = {
+                transport,
+                lastActive: new Date()
+              }
               console.log(`[MCP] Session initialized (dev mode): ${sessionId}`)
             },
             enableDnsRebindingProtection: this.options.enableDnsRebindingProtection,
@@ -404,7 +423,7 @@ export class VueMcpHttpServer {
     })
 
     // Debug sessions endpoint
-    this.app.get('/debug/sessions', (req: express.Request, res: express.Response) => {
+    this.app.get('/debug/sessions', (_req: express.Request, res: express.Response) => {
       res.json({
         activeSessions: this.getActiveSessions().map(sessionId => ({
           sessionId,
@@ -425,7 +444,9 @@ export class VueMcpHttpServer {
         return
       }
       
-      const transport = this.transports[sessionId]
+      const sessionData = this.transports[sessionId]
+      sessionData.lastActive = new Date()
+      const transport = sessionData.transport
       console.log(`[MCP] Handling ${req.method} request for session: ${sessionId}`)
       
       await transport.handleRequest(req, res)
@@ -460,6 +481,9 @@ export class VueMcpHttpServer {
             console.error('⚠️  Failed to start Inspector, but server will continue:', error)
           }
 
+          // 启动会话清理定时器
+          this.startSessionCleanup()
+
           resolve()
         })
 
@@ -482,8 +506,14 @@ export class VueMcpHttpServer {
       // 停止 Inspector
       this.stopInspector()
 
+      // 停止清理定时器
+      if (this.cleanupTimer) {
+        clearInterval(this.cleanupTimer)
+        this.cleanupTimer = undefined
+      }
+
       // 关闭所有活跃的传输连接
-      Object.values(this.transports).forEach(transport => {
+      Object.values(this.transports).forEach(({ transport }) => {
         try {
           transport.close()
         } catch (error) {
@@ -516,10 +546,10 @@ export class VueMcpHttpServer {
   }
 
   closeSession(sessionId: string): boolean {
-    const transport = this.transports[sessionId]
-    if (transport) {
+    const sessionData = this.transports[sessionId]
+    if (sessionData) {
       try {
-        transport.close()
+        sessionData.transport.close()
         delete this.transports[sessionId]
         console.log(`[MCP] Manually closed session: ${sessionId}`)
         return true
@@ -560,5 +590,38 @@ export class VueMcpHttpServer {
    */
   stopInspectorManually(): void {
     this.stopInspector()
+  }
+
+  /**
+   * 启动会话清理定时器
+   */
+  private startSessionCleanup(): void {
+    this.cleanupTimer = setInterval(() => {
+      this.cleanupExpiredSessions()
+    }, CONSTANTS.CLEANUP_INTERVAL)
+  }
+
+  /**
+   * 清理过期会话
+   */
+  private cleanupExpiredSessions(): void {
+    const now = new Date()
+    const expiredSessions: string[] = []
+
+    Object.entries(this.transports).forEach(([sessionId, sessionData]) => {
+      const timeSinceLastActive = now.getTime() - sessionData.lastActive.getTime()
+      if (timeSinceLastActive > CONSTANTS.SESSION_TIMEOUT) {
+        expiredSessions.push(sessionId)
+      }
+    })
+
+    expiredSessions.forEach(sessionId => {
+      console.log(`[MCP] Cleaning up expired session: ${sessionId}`)
+      this.closeSession(sessionId)
+    })
+
+    if (expiredSessions.length > 0) {
+      console.log(`[MCP] Cleaned up ${expiredSessions.length} expired sessions`)
+    }
   }
 }

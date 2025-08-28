@@ -1,4 +1,6 @@
 export { VueMcpServer } from './server.js'
-export { DevToolsRuntimeLayer,  } from './devtools-layer.js'
+export { DevToolsRuntimeLayer } from './devtools-layer.js'
 export { VueMcpHttpServer } from './http-server.js'
+export { VueMcpError, ErrorCode, errorManager } from './errors.js'
+export { logger, LogLevel } from './logger.js'
 export * from './types.js'

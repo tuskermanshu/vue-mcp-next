@@ -139,6 +139,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.0
         version: 1.17.3
+      '@vue-mcp-next/core':
+        specifier: workspace:*
+        version: link:../core
       '@vue/devtools-kit':
         specifier: ^7.0.0
         version: 7.7.7

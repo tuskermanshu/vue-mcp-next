@@ -8,6 +8,7 @@ import type {
   VueMcpContext,
   VueAppBridge
 } from './types.js'
+import { VueMcpError, ErrorCode } from './errors.js'
 
 /**
  * DevTools运行时层 - 负责与浏览器中运行的Vue应用进行实时交互
@@ -42,22 +43,26 @@ export class DevToolsRuntimeLayer {
 
   async getComponentState(selector: ComponentSelector): Promise<ComponentState> {
     if (!this.bridge) {
-      throw new Error('No bridge available - DevTools integration not configured')
+      throw VueMcpError.devtoolsInitFailed('No bridge available')
     }
+    this.validateComponentSelector(selector)
     return this.bridge.getComponentState(selector)
   }
 
   async updateComponentState(selector: ComponentSelector, patch: StatePatch): Promise<void> {
     if (!this.bridge) {
-      throw new Error('No bridge available - DevTools integration not configured')
+      throw VueMcpError.devtoolsInitFailed('No bridge available')
     }
+    this.validateComponentSelector(selector)
+    this.validateStatePatch(patch)
     return this.bridge.updateComponentState(selector, patch)
   }
 
   async highlightComponent(selector: ComponentSelector): Promise<void> {
     if (!this.bridge) {
-      throw new Error('No bridge available - DevTools integration not configured')
+      throw VueMcpError.devtoolsInitFailed('No bridge available')
     }
+    this.validateComponentSelector(selector)
     return this.bridge.highlightComponent(selector)
   }
 
@@ -86,6 +91,45 @@ export class DevToolsRuntimeLayer {
   async cleanup() {
     if (this.bridge) {
       this.bridge.cleanup()
+    }
+  }
+
+  private validateComponentSelector(selector: ComponentSelector): void {
+    if (!selector || typeof selector !== 'object') {
+      throw new VueMcpError(
+        ErrorCode.COMPONENT_STATE_INVALID,
+        'Invalid component selector: must be an object'
+      )
+    }
+    
+    if (!selector.name && !selector.id && !selector.domSelector) {
+      throw new VueMcpError(
+        ErrorCode.COMPONENT_STATE_INVALID,
+        'Invalid component selector: must provide name, id, or domSelector'
+      )
+    }
+  }
+
+  private validateStatePatch(patch: StatePatch): void {
+    if (!patch || typeof patch !== 'object') {
+      throw new VueMcpError(
+        ErrorCode.COMPONENT_STATE_INVALID,
+        'Invalid state patch: must be an object'
+      )
+    }
+    
+    if (!Array.isArray(patch.path) || patch.path.length === 0) {
+      throw new VueMcpError(
+        ErrorCode.COMPONENT_STATE_INVALID,
+        'Invalid state patch: path must be a non-empty array'
+      )
+    }
+    
+    if (patch.path.some(p => typeof p !== 'string')) {
+      throw new VueMcpError(
+        ErrorCode.COMPONENT_STATE_INVALID,
+        'Invalid state patch: all path elements must be strings'
+      )
     }
   }
 }

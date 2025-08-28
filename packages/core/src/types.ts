@@ -3,34 +3,69 @@ import type { ViteDevServer } from 'vite'
 
 // MCP Server 配置
 export interface VueMcpOptions {
-  context?: any
+  /** MCP 上下文 - 通常由构建工具插件自动设置 */
+  context?: VueMcpContext
+  /** MCP 服务器端口 */
   port?: number
-  mcpServerInfo?: {
-    name?: string
-    version?: string
-  }
-  features?: {
-    devtools?: boolean
-    performanceMonitoring?: boolean
-  }
+  /** 服务器基本信息 */
+  mcpServerInfo?: McpServerInfo
+  /** 功能特性开关 */
+  features?: FeatureFlags
   /** 客户端脚本注入目标文件 */
   appendTo?: string | RegExp
-  /** MCP Inspector 集成 */
-  inspector?: {
-    enabled?: boolean
-    authToken?: string
-    autoStart?: boolean
-    port?: number
-    openBrowser?: boolean   // 是否自动打开浏览器
-  }
+  /** MCP Inspector 集成配置 */
+  inspector?: InspectorConfig
+}
+
+/** MCP 服务器基本信息 */
+export interface McpServerInfo {
+  name?: string
+  version?: string
+  description?: string
+}
+
+/** 功能特性开关 */
+export interface FeatureFlags {
+  /** 是否启用 DevTools 集成 */
+  devtools?: boolean
+  /** 是否启用性能监控 */
+  performanceMonitoring?: boolean
+  /** 是否启用组件高亮 */
+  componentHighlight?: boolean
+  /** 是否启用状态管理支持 */
+  stateManagement?: boolean
+}
+
+/** Inspector 配置 */
+export interface InspectorConfig {
+  /** 是否启用 Inspector */
+  enabled?: boolean
+  /** 认证 Token */
+  authToken?: string
+  /** 是否自动启动 */
+  autoStart?: boolean
+  /** Inspector 端口 */
+  port?: number
+  /** 是否自动打开浏览器 */
+  openBrowser?: boolean
 }
 
 // Vue MCP 上下文
 export interface VueMcpContext {
-  [x: string]: any
+  /** 已注册的 Vue 应用实例 */
   apps: Map<string, App>
+  /** Vite 开发服务器实例（仅开发模式） */
   viteServer?: ViteDevServer
+  /** 项目根目录 */
   projectRoot: string
+  /** 构建工具类型 */
+  buildTool: 'vite' | 'webpack' | 'farm' | 'rollup' | 'unknown'
+  /** 当前运行模式 */
+  mode: 'development' | 'production' | 'test' | undefined
+  /** 当前命令类型 */
+  command: 'serve' | 'build'
+  /** 扩展数据 */
+  [key: string]: any
 }
 
 // 组件选择器
@@ -63,9 +98,14 @@ export interface ComponentState {
 
 // 状态补丁
 export interface StatePatch {
+  /** 状态路径（数组形式，如 ['data', 'count']） */
   path: string[]
+  /** 新值 */
   value: any
-  valueType?: string | number | boolean | object| []
+  /** 值类型 */
+  valueType?: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'null' | 'undefined'
+  /** 操作类型 */
+  operation?: 'set' | 'delete' | 'push' | 'splice'
 }
 
 // 路由信息

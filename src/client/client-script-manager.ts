@@ -1,5 +1,12 @@
 // 内联的客户端模板内容
 const CLIENT_TEMPLATE = `// Vue MCP Client - 使用 Vite 内置 HMR + DevTools Kit
+// Declare global variable for initialization check
+declare global {
+  interface Window {
+    __VUE_MCP_DEVTOOLS_INITIALIZED__?: boolean
+    __VUE_MCP_CLIENT_READY_SENT__?: boolean
+  }
+}
 import { devtools, devtoolsRouterInfo, devtoolsState, getInspector, stringify, toggleHighPerfMode } from '@vue/devtools-kit'
 
 // Constants
@@ -12,9 +19,14 @@ const CIRCULAR_REF_KEYS = ['vnode', 'component', 'parent', 'root', '__v_skip']
 // Global state
 let highlightComponentTimeout = null
 
-// Initialize DevTools
-devtools.init()
-console.log('[Vue MCP] DevTools Kit loaded successfully')
+// Initialize DevTools only once
+if (!window.__VUE_MCP_DEVTOOLS_INITIALIZED__) {
+  devtools.init()
+  window.__VUE_MCP_DEVTOOLS_INITIALIZED__ = true
+  console.log('[Vue MCP] DevTools Kit initialized successfully')
+} else {
+  console.log('[Vue MCP] DevTools Kit already initialized, skipping')
+}
 
 // Utility functions
 function flattenChildren(node) {
@@ -328,20 +340,23 @@ function safeSerializeForTransport(obj) {
   }))
 }
 
-// Notify server that client is ready
-setTimeout(() => {
-  fetch('/__vue-mcp/client-ready', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      ready: true, 
-      devtoolsAvailable: true,
-      timestamp: Date.now()
+// Notify server that client is ready (only once)
+if (!window.__VUE_MCP_CLIENT_READY_SENT__) {
+  window.__VUE_MCP_CLIENT_READY_SENT__ = true
+  setTimeout(() => {
+    fetch('/__vue-mcp/client-ready', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        ready: true, 
+        devtoolsAvailable: true,
+        timestamp: Date.now()
+      })
+    }).catch(() => {
+      console.warn('[Vue MCP Client] Failed to notify server via HTTP')
     })
-  }).catch(() => {
-    console.warn('[Vue MCP Client] Failed to notify server via HTTP')
-  })
-}, CLIENT_READY_DELAY)`
+  }, CLIENT_READY_DELAY)
+}`
 
 /**
  * 客户端脚本管理器

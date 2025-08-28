@@ -1,15 +1,25 @@
 // playground/tsconfig.json
 {
-  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "composite": true,
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": false,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "jsx": "preserve",
     "jsxImportSource": "vue",
-    "allowImportingTsExtensions": false,
-    "noEmit": true
+    "baseUrl": "."
   },
   "include": [
     "src/**/*",
     "*.vue"
-  ],
+  ]
 }

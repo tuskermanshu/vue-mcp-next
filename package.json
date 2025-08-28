@@ -1,6 +1,6 @@
 {
   "name": "vue-mcp-next",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Vue MCP Next - A modern Vue.js Model Context Protocol implementation for Vue.js applications",
   "type": "module",
   "private": false,

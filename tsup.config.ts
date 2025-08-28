@@ -42,5 +42,6 @@ export default defineConfig({
   splitting: false,
   onSuccess: async () => {
     console.log('✅ Build completed successfully!')
+    console.log('📦 All files generated - ready for distribution')
   }
 })

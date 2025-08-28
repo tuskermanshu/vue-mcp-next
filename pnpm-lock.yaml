@@ -131,13 +131,13 @@ importers:
         specifier: ^2.4.0
         version: 2.4.6
       typescript:
-        specifier: ^5.6.0
+        specifier: ^5.9.2
         version: 5.9.2
 
   packages/plugin:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.0.0
+        specifier: ^1.17.3
         version: 1.17.3
       '@vue-mcp-next/core':
         specifier: workspace:*
@@ -146,18 +146,18 @@ importers:
         specifier: ^7.0.0
         version: 7.7.7
       zod:
-        specifier: ^3.22.0
+        specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.11
       typescript:
-        specifier: ^5.6.0
+        specifier: ^5.9.2
         version: 5.9.2
       vite:
-        specifier: ' ^6.0.0'
-        version: 6.3.5(@types/node@20.19.11)(yaml@2.8.1)
+        specifier: ^7.1.3
+        version: 7.1.3(@types/node@20.19.11)(yaml@2.8.1)
       vue:
         specifier: ^3.5.18
         version: 3.5.18(typescript@5.9.2)
@@ -187,7 +187,7 @@ importers:
         specifier: ^5.9.2
         version: 5.9.2
       vite:
-        specifier: ' 7.1.3'
+        specifier: ^7.1.3
         version: 7.1.3(@types/node@20.19.11)(yaml@2.8.1)
       vite-hot-client:
         specifier: ^2.1.0
@@ -2892,46 +2892,6 @@ packages:
     resolution: {integrity: sha512-YvEKooQcSiBTAs0DoYLfefNja9bLgkFM7NI2b07bE2SruuvX0MEa9cMaxjKVMkeCp5Nz9FRIdcN1rOdFVBeL6Q==}
     peerDependencies:
       vite: ^3.0.0-0 || ^4.0.0-0 || ^5.0.0-0 || ^6.0.0-0 || ^7.0.0-0
-
-  vite@6.3.5:
-    resolution: {integrity: sha512-cZn6NDFE7wdTpINgs++ZJ4N49W2vRp8LCKrn3Ob1kYNtOo21vfDoaV5GzBfLU4MovSAB8uNRm4jgzVQZ+mBzPQ==}
-    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
-    hasBin: true
-    peerDependencies:
-      '@types/node': ^18.0.0 || ^20.0.0 || >=22.0.0
-      jiti: '>=1.21.0'
-      less: '*'
-      lightningcss: ^1.21.0
-      sass: '*'
-      sass-embedded: '*'
-      stylus: '*'
-      sugarss: '*'
-      terser: ^5.16.0
-      tsx: ^4.8.1
-      yaml: ^2.4.2
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      jiti:
-        optional: true
-      less:
-        optional: true
-      lightningcss:
-        optional: true
-      sass:
-        optional: true
-      sass-embedded:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      terser:
-        optional: true
-      tsx:
-        optional: true
-      yaml:
-        optional: true
 
   vite@7.1.3:
     resolution: {integrity: sha512-OOUi5zjkDxYrKhTV3V7iKsoS37VUM7v40+HuwEmcrsf11Cdx9y3DIr2Px6liIcZFwt3XSRpQvFpL3WVy7ApkGw==}
@@ -6019,19 +5979,6 @@ snapshots:
       vite: 7.1.3(@types/node@20.19.11)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
-
-  vite@6.3.5(@types/node@20.19.11)(yaml@2.8.1):
-    dependencies:
-      esbuild: 0.25.9
-      fdir: 6.5.0(picomatch@4.0.3)
-      picomatch: 4.0.3
-      postcss: 8.5.6
-      rollup: 4.46.4
-      tinyglobby: 0.2.14
-    optionalDependencies:
-      '@types/node': 20.19.11
-      fsevents: 2.3.3
-      yaml: 2.8.1
 
   vite@7.1.3(@types/node@20.19.11)(yaml@2.8.1):
     dependencies:

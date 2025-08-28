@@ -11,9 +11,8 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "@vue-mcp-next/core": "workspace:*",
-    "@vue-mcp-next/plugin": "workspace:*",
-    "vue": "catalog:"
+    "vue-mcp-next": "link:../",
+    "vue": "^3.5.18"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

@@ -12,12 +12,4 @@
     "src/**/*",
     "*.vue"
   ],
-  "references": [
-    {
-      "path": "../packages/core"
-    },
-    {
-      "path": "../packages/plugin"
-    }
-  ]
 }

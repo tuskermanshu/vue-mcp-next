@@ -1,5 +1,5 @@
 import type { ViteDevServer } from 'vite'
-import type { VueAppBridge, ComponentSelector, ComponentNode, ComponentState, StatePatch, RouterInfo, PiniaState } from '@vue-mcp-next/core'
+import type { VueAppBridge, ComponentSelector, ComponentNode, ComponentState, StatePatch, RouterInfo, PiniaState } from '../../server'
 import { NETWORK_CONSTANTS, LOG_PREFIXES, ERROR_MESSAGES } from './constants.js'
 import { generateRequestId, createTimeoutPromise, ResourceManager } from './utils.js'
 

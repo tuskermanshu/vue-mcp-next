@@ -1,9 +1,9 @@
 import type { Plugin, ResolvedConfig } from 'vite'
-import type { VueMcpOptions } from '@vue-mcp-next/core'
-import { VueMcpBasePlugin } from '../lib/base-plugin.js'
-import { createDevToolsBridge } from '../lib/devtools-bridge.js'
-import { VIRTUAL_MODULES, LOG_PREFIXES, DEFAULT_CONFIG } from '../lib/constants.js'
-import { ResourceManager } from '../lib/utils.js'
+import type { VueMcpOptions } from '../../server'
+import { VueMcpBasePlugin } from '../base/base-plugin.js'
+import { createDevToolsBridge } from '../base/devtools-bridge.js'
+import { VIRTUAL_MODULES, LOG_PREFIXES, DEFAULT_CONFIG } from '../base/constants.js'
+import { ResourceManager } from '../base/utils.js'
 
 /**
  * Vite适配器 - 将Vue MCP集成到Vite构建工具中

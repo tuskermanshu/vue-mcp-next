@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import {vueMcpVitePlugin} from "@vue-mcp-next/plugin"
+import { vueMcpVitePlugin } from "vue-mcp-next"
 import DevTools from 'vite-plugin-vue-devtools'
 
 

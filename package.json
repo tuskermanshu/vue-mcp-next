@@ -1,6 +1,6 @@
 {
   "name": "vue-mcp-next",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Vue MCP Next - A modern Vue.js Model Context Protocol implementation for Vue.js applications",
   "type": "module",
   "private": false,
@@ -9,15 +9,6 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    },
-    "./plugin": {
-      "types": "./dist/plugin.d.ts",
-      "import": "./dist/plugin.js"
-    },
-    "./core": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
@@ -34,32 +25,21 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "build": "pnpm run typecheck && tsup",
+    "build": "tsc --noEmit && tsup",
     "build:fast": "tsup",
-    "build:legacy": "pnpm run build:clean && pnpm run build:packages && pnpm run build:typecheck && pnpm run build:bundle && pnpm run build:verify",
-    "build:clean": "rm -rf dist && pnpm -r --filter='./packages/*' clean",
-    "build:typecheck": "pnpm -r typecheck",
-    "build:packages": "node scripts/legacy/build-packages.mjs", 
-    "build:bundle": "tsup",
-    "build:verify": "node scripts/legacy/verify-build.mjs",
     "dev": "tsup --watch",
-    "dev:packages": "pnpm -r --parallel dev",
-    "dev:core": "pnpm --filter='@vue-mcp-next/core' dev",
-    "dev:plugin": "pnpm --filter='@vue-mcp-next/plugin' dev",
-    "dev:playground": "pnpm --filter='playground' dev",
-    "test": "pnpm -r test",
-    "test:unit": "vitest",
+    "dev:playground": "cd playground && pnpm dev",
+    "test": "vitest",
     "test:e2e": "playwright test",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "lint:check": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path .gitignore",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "pnpm -r typecheck",
-    "clean": "pnpm -r clean && rm -rf node_modules/.pnpm && rm -rf dist",
-    "clean:dist": "pnpm -r --filter='./packages/*' clean && rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules",
     "release": "changeset publish",
     "version": "changeset version",
-    "preview": "pnpm --filter='playground' preview",
+    "preview": "cd playground && pnpm preview",
     "prepare": "husky install",
     "prepublishOnly": "pnpm run build"
   },
@@ -81,6 +61,8 @@
     "@eslint/js": "^9.0.0",
     "@playwright/test": "^1.40.0",
     "@types/node": "^20.0.0",
+    "@types/express": "^4.17.0",
+    "@types/cors": "^2.8.0",
     "@typescript-eslint/eslint-plugin": "^8.40.0",
     "@typescript-eslint/parser": "^8.40.0",
     "@vitejs/plugin-vue": "^6.0.0",

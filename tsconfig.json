@@ -5,7 +5,7 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": false,
     "strict": true,
-    "noEmit": false,
+    "noEmit": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
@@ -14,21 +14,21 @@
     "verbatimModuleSyntax": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "baseUrl": ".",
-    "paths": {
-      "@vue-mcp-next/core": ["./packages/core/src"],
-      "@vue-mcp-next/plugin": ["./packages/plugin/src"]
-    }
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "dist",
+    "rootDir": "src"
   },
-  "include": [],
-  "references": [
-    {
-      "path": "./packages/core"
-    },
-    {
-      "path": "./packages/plugin"
-    },
-    {
-      "path": "./playground"
-    }
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "playground",
+    "packages",
+    "scripts",
+    "**/*.test.*",
+    "**/*.spec.*"
   ]
 }

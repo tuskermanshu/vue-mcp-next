@@ -2,8 +2,7 @@ import { defineConfig } from 'tsup'
 
 export default defineConfig({
   entry: {
-    index: 'main-entry.ts',
-    plugin: 'packages/plugin/src/adapters/vite.ts'
+    index: 'src/index.ts'
   },
   format: ['esm', 'cjs'],
   dts: true,

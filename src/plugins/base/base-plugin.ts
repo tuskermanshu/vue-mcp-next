@@ -1,7 +1,7 @@
-import type { VueMcpOptions, VueMcpContext, VueAppBridge } from '@vue-mcp-next/core'
-import { VueMcpServer } from '@vue-mcp-next/core'
+import type { VueMcpOptions, VueMcpContext, VueAppBridge } from '../../server/types.js'
+import { VueMcpServer } from '../../server/index.js'
 import { VueMcpConfigManager } from './config-manager.js'
-import { ClientScriptManager } from '../client/client-script-manager.js'
+import { ClientScriptManager } from '../../client/client-script-manager.js'
 import { ResourceManager } from './utils.js'
 import { HTTP_ROUTES, LOG_PREFIXES } from './constants.js'
 

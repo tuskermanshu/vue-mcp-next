@@ -1,4 +1,4 @@
-import type { VueMcpOptions } from '@vue-mcp-next/core'
+import type { VueMcpOptions } from '../../server'
 import { DEFAULT_CONFIG } from './constants.js'
 import { deepMerge } from './utils.js'
 

@@ -1,12 +1,5 @@
 // 内联的客户端模板内容
 const CLIENT_TEMPLATE = `// Vue MCP Client - 使用 Vite 内置 HMR + DevTools Kit
-// Declare global variable for initialization check
-declare global {
-  interface Window {
-    __VUE_MCP_DEVTOOLS_INITIALIZED__?: boolean
-    __VUE_MCP_CLIENT_READY_SENT__?: boolean
-  }
-}
 import { devtools, devtoolsRouterInfo, devtoolsState, getInspector, stringify, toggleHighPerfMode } from '@vue/devtools-kit'
 
 // Constants

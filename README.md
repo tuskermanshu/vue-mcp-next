@@ -1,59 +1,61 @@
 # Vue MCP Next
 
+**Language / 语言:** [English](README.md) | [中文](README_zh.md)
+
 > A modern Vue.js Model Context Protocol implementation for Vue.js applications
 
-Vue MCP Next 是一个为 Vue.js 应用提供**运行时状态操作和控制能力**的现代化 MCP (Model Context Protocol) 实现。该项目专注于实时操作正在运行的 Vue 应用，支持测试、调试、演示等场景，采用分层架构设计，支持多种构建工具集成，完全符合 MCP 官方协议规范。
+Vue MCP Next is a modern MCP (Model Context Protocol) implementation that provides **runtime state manipulation and control capabilities** for Vue.js applications. This project focuses on real-time manipulation of running Vue applications, supporting testing, debugging, demonstration scenarios, with layered architecture design, multi-build tool integration, and full compliance with official MCP protocol specifications.
 
-## ⚠️ 重要前置条件
+## ⚠️ Important Prerequisites
 
-**使用 Vue MCP Next 之前，必须先安装并启用 Vue DevTools！**
+**Before using Vue MCP Next, you must install and enable Vue DevTools!**
 
-Vue MCP Next 依赖 Vue DevTools 来访问和操作 Vue 应用的运行时状态。请确保：
+Vue MCP Next relies on Vue DevTools to access and manipulate the runtime state of Vue applications. Please ensure:
 
-1. **浏览器中安装 Vue DevTools 扩展**
-2. **应用运行时 DevTools 处于连接状态**
-3. **确认 DevTools 能正常显示组件树和状态**
+1. **Install Vue DevTools browser extension**
+2. **DevTools is connected when the application is running**
+3. **Confirm DevTools can properly display component tree and state**
 
-没有 Vue DevTools，Vue MCP Next 将无法正常工作。
+Without Vue DevTools, Vue MCP Next will not work properly.
 
-## ✨ 特性
+## ✨ Features
 
-- 🚀 **标准 MCP 协议**：完全基于官方 SDK 实现
-- 🏗️ **分层架构设计**：Core 层专注协议，Plugin 层适配平台
-- 🔧 **多平台支持**：支持 Vite、Webpack、Farm 等构建工具
-- ⚡ **运行时操作**：实时查看和修改 Vue 应用状态
-- 🔍 **内置 Inspector**：集成 MCP Inspector 调试工具
-- 📱 **Vue DevTools 集成**：基于 @vue/devtools-kit
+- 🚀 **Standard MCP Protocol**: Fully implemented based on official SDK
+- 🏗️ **Layered Architecture**: Core layer focuses on protocol, Plugin layer adapts platforms
+- 🔧 **Multi-platform Support**: Supports Vite, Webpack, Farm and other build tools
+- ⚡ **Runtime Operations**: Real-time viewing and modification of Vue application state
+- 🔍 **Built-in Inspector**: Integrated MCP Inspector debugging tool
+- 📱 **Vue DevTools Integration**: Based on @vue/devtools-kit
 
-## 📦 安装
+## 📦 Installation
 
 ```bash
-# 使用 npm
+# Using npm
 npm install vue-mcp-next
 
-# 使用 yarn
+# Using yarn
 yarn add vue-mcp-next
 
-# 使用 pnpm
+# Using pnpm
 pnpm add vue-mcp-next
 ```
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 前置要求
+### Prerequisites
 
-在开始之前，请确保：
+Before getting started, please ensure:
 
-1. **安装 Vue DevTools 浏览器扩展**
-   - [Chrome 扩展](https://chrome.google.com/webstore/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-   - [Firefox 扩展](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-   - [Edge 扩展](https://microsoftedge.microsoft.com/addons/detail/vuejs-devtools/olofadcdnkkjdfgjcmjaadnlehnnihnl)
+1. **Install Vue DevTools browser extension**
+   - [Chrome Extension](https://chrome.google.com/webstore/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
+   - [Firefox Extension](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
+   - [Edge Extension](https://microsoftedge.microsoft.com/addons/detail/vuejs-devtools/olofadcdnkkjdfgjcmjaadnlehnnihnl)
 
-2. **确保 Vue DevTools 能正常连接到你的应用**
+2. **Ensure Vue DevTools can properly connect to your application**
 
-### Vite 项目配置
+### Vite Project Configuration
 
-在你的 `vite.config.ts` 中添加插件：
+Add the plugin to your `vite.config.ts`:
 
 ```typescript
 import { defineConfig } from 'vite'
@@ -63,109 +65,108 @@ import DevTools from 'vite-plugin-vue-devtools'
 
 export default defineConfig({
   server: {
-    port: 5174  // Vite 使用 5174 端口
+    port: 5174  // Vite uses port 5174
   },
   plugins: [
     vue(),
-    DevTools(),  // 推荐：开发时启用 Vue DevTools
+    DevTools(),  // Recommended: Enable Vue DevTools during development
     vueMcpVitePlugin({
-      port: 8890,                    // MCP 服务器端口
+      port: 8890,                    // MCP server port
       inspector: {
-        enabled: true,               // 启用 MCP Inspector
-        autoStart: true,             // 自动启动
-        openBrowser: false,          // 是否自动打开浏览器
+        enabled: true,               // Enable MCP Inspector
+        autoStart: true,             // Auto start
+        openBrowser: false,          // Whether to automatically open browser
       }
     })
   ],
 })
 ```
 
-### 启动项目
+### Start the Project
 
 ```bash
 pnpm dev
 ```
 
-启动后：
-- 你的 Vue 应用将运行在 http://localhost:5174
-- MCP 服务器将运行在端口 8890
-- MCP Inspector 将自动启动（如果启用）
-- 确保浏览器中的 Vue DevTools 扩展能正常连接到你的应用
+After starting:
+- Your Vue application will run at http://localhost:5174
+- MCP server will run on port 8890
+- MCP Inspector will start automatically (if enabled)
+- Ensure the Vue DevTools extension in your browser can properly connect to your application
 
-## 🔧 配置选项
+## 🔧 Configuration Options
 
-### VueMcpVitePlugin 选项
+### VueMcpVitePlugin Options
 
 ```typescript
 interface VueMcpVitePluginOptions {
-  port?: number                    // MCP 服务器端口，默认 8890
+  port?: number                    // MCP server port, default 8890
   inspector?: {
-    enabled?: boolean              // 启用 Inspector，默认 true
-    autoStart?: boolean            // 自动启动，默认 false
-    openBrowser?: boolean          // 自动打开浏览器，默认 false
+    enabled?: boolean              // Enable Inspector, default true
+    autoStart?: boolean            // Auto start, default false
+    openBrowser?: boolean          // Auto open browser, default false
   }
 }
 ```
 
+## 📋 Available Features
 
-## 📋 可用功能
+- **Component Tree Viewing** (`get-component-tree`)
+- **Component State Get/Edit** (`get-component-state`, `edit-component-state`) 
+- **Component Highlighting** (`highlight-component`)
+- **Router Information** (`get-router-info`)
+- **Pinia State Management** (`get-pinia-tree`, `get-pinia-state`)
 
-- **组件树查看** (`get-component-tree`)
-- **组件状态获取/编辑** (`get-component-state`, `edit-component-state`) 
-- **组件高亮显示** (`highlight-component`)
-- **路由信息获取** (`get-router-info`)
-- **Pinia 状态管理** (`get-pinia-tree`, `get-pinia-state`)
+## 💡 Use Cases
 
-## 💡 使用场景
+- **Real-time Debugging**: View and modify component state in Cursor
+- **State Validation**: Verify component and application state meets expectations
+- **Interactive Testing**: Simulate user interactions and state changes through AI commands
+- **Demo and Teaching**: Showcase internal state and component structure of Vue applications
+- **Development Assistance**: Quickly view router information, Pinia store state, etc.
 
-- **实时调试**：在 Cursor 中查看和修改组件状态
-- **状态验证**：验证组件和应用状态是否符合预期
-- **交互测试**：通过 AI 指令模拟用户交互和状态变化
-- **演示和教学**：展示 Vue 应用的内部状态和组件结构
-- **开发辅助**：快速查看路由信息、Pinia store 状态等
-
-## 🏗️ 项目结构
+## 🏗️ Project Structure
 
 ```
 vue-mcp-next/
 ├── src/
-│   ├── client/                 # 客户端脚本
+│   ├── client/                 # Client scripts
 │   │   ├── client-script-manager.ts
 │   │   └── devtools-client.ts
-│   ├── plugins/                # 构建工具插件
-│   │   ├── base/               # 基础插件功能
-│   │   └── vite/               # Vite 插件实现
-│   ├── server/                 # MCP 服务器
+│   ├── plugins/                # Build tool plugins
+│   │   ├── base/               # Base plugin functionality
+│   │   └── vite/               # Vite plugin implementation
+│   ├── server/                 # MCP server
 │   │   ├── devtools-layer.ts
 │   │   ├── http-server.ts
 │   │   └── server.ts
-│   └── shared/                 # 共享类型和工具
-├── playground/                 # 开发测试环境
-└── dist/                      # 构建输出
+│   └── shared/                 # Shared types and utilities
+├── playground/                 # Development test environment
+└── dist/                      # Build output
 ```
 
-## 🛠️ 开发
+## 🛠️ Development
 
 ```bash
-# 安装依赖
+# Install dependencies
 pnpm install
 
-# 开发模式
+# Development mode
 pnpm dev
 
-# 启动 playground
+# Start playground
 pnpm dev:playground
 
-# 构建
+# Build
 pnpm build
 
-# 测试
+# Test
 pnpm test
 
-# 类型检查
+# Type check
 pnpm typecheck
 ```
 
-## 📄 许可证
+## 📄 License
 
 MIT License

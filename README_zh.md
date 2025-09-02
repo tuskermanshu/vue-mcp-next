@@ -2,9 +2,6 @@
 
 **Language / 语言:** [English](README.md) | [中文](README_zh.md)
 
-> 一个现代化的 Vue.js 模型上下文协议实现
-
-Vue MCP Next 是一个为 Vue.js 应用提供**运行时状态操作和控制能力**的现代化 MCP (Model Context Protocol) 实现。该项目受 [vite-plugin-vue-mcp](https://github.com/webfansplz/vite-plugin-vue-mcp) 的优秀工作启发并基于其构建，专注于实时操作正在运行的 Vue 应用，支持测试、调试、演示等场景，采用分层架构设计，支持多种构建工具集成，完全符合 MCP 官方协议规范。
 
 ## 📦 安装
 
@@ -126,6 +123,12 @@ interface VueMcpVitePluginOptions {
 - **交互测试**：通过 AI 指令模拟用户交互和状态变化
 - **演示和教学**：展示 Vue 应用的内部状态和组件结构
 - **开发辅助**：快速查看路由信息、Pinia store 状态等
+
+
+
+> 一个现代化的 Vue.js 模型上下文协议实现
+
+Vue MCP Next 是一个为 Vue.js 应用提供**运行时状态操作和控制能力**的现代化 MCP (Model Context Protocol) 实现。该项目受 [vite-plugin-vue-mcp](https://github.com/webfansplz/vite-plugin-vue-mcp) 的优秀工作启发并基于其构建，专注于实时操作正在运行的 Vue 应用，支持测试、调试、演示等场景，采用分层架构设计，支持多种构建工具集成，完全符合 MCP 官方协议规范。
 
 ## 🏗️ 项目结构
 

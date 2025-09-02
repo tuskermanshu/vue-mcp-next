@@ -2,10 +2,6 @@
 
 **Language / 语言:** [English](README.md) | [中文](README_zh.md)
 
-> A modern Vue.js Model Context Protocol implementation for Vue.js applications
-
-Vue MCP Next is a modern MCP (Model Context Protocol) implementation that provides **runtime state manipulation and control capabilities** for Vue.js applications. This project is inspired by and built upon the excellent work of [vite-plugin-vue-mcp](https://github.com/webfansplz/vite-plugin-vue-mcp), focusing on real-time manipulation of running Vue applications, supporting testing, debugging, demonstration scenarios, with layered architecture design, multi-build tool integration, and full compliance with official MCP protocol specifications.
-
 ## 📦 Installation
 
 ```bash
@@ -126,6 +122,11 @@ interface VueMcpVitePluginOptions {
 - **Interactive Testing**: Simulate user interactions and state changes through AI commands
 - **Demo and Teaching**: Showcase internal state and component structure of Vue applications
 - **Development Assistance**: Quickly view router information, Pinia store state, etc.
+
+
+> A modern Vue.js Model Context Protocol implementation for Vue.js applications
+
+Vue MCP Next is a modern MCP (Model Context Protocol) implementation that provides **runtime state manipulation and control capabilities** for Vue.js applications. This project is inspired by and built upon the excellent work of [vite-plugin-vue-mcp](https://github.com/webfansplz/vite-plugin-vue-mcp), focusing on real-time manipulation of running Vue applications, supporting testing, debugging, demonstration scenarios, with layered architecture design, multi-build tool integration, and full compliance with official MCP protocol specifications.
 
 ## 🏗️ Project Structure
 

@@ -6,6 +6,19 @@
 
 Vue MCP Next is a modern MCP (Model Context Protocol) implementation that provides **runtime state manipulation and control capabilities** for Vue.js applications. This project is inspired by and built upon the excellent work of [vite-plugin-vue-mcp](https://github.com/webfansplz/vite-plugin-vue-mcp), focusing on real-time manipulation of running Vue applications, supporting testing, debugging, demonstration scenarios, with layered architecture design, multi-build tool integration, and full compliance with official MCP protocol specifications.
 
+## 📦 Installation
+
+```bash
+# Using npm
+npm install vue-mcp-next
+
+# Using yarn
+yarn add vue-mcp-next
+
+# Using pnpm
+pnpm add vue-mcp-next
+```
+
 ## ⚠️ Important Prerequisites
 
 **Before using Vue MCP Next, you must install and enable Vue DevTools!**
@@ -27,18 +40,7 @@ Without Vue DevTools, Vue MCP Next will not work properly.
 - 🔍 **Built-in Inspector**: Integrated MCP Inspector debugging tool
 - 📱 **Vue DevTools Integration**: Based on @vue/devtools-kit
 
-## 📦 Installation
 
-```bash
-# Using npm
-npm install vue-mcp-next
-
-# Using yarn
-yarn add vue-mcp-next
-
-# Using pnpm
-pnpm add vue-mcp-next
-```
 
 ## 🚀 Quick Start
 

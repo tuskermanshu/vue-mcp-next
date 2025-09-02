@@ -6,6 +6,19 @@
 
 Vue MCP Next 是一个为 Vue.js 应用提供**运行时状态操作和控制能力**的现代化 MCP (Model Context Protocol) 实现。该项目受 [vite-plugin-vue-mcp](https://github.com/webfansplz/vite-plugin-vue-mcp) 的优秀工作启发并基于其构建，专注于实时操作正在运行的 Vue 应用，支持测试、调试、演示等场景，采用分层架构设计，支持多种构建工具集成，完全符合 MCP 官方协议规范。
 
+## 📦 安装
+
+```bash
+# 使用 npm
+npm install vue-mcp-next
+
+# 使用 yarn
+yarn add vue-mcp-next
+
+# 使用 pnpm
+pnpm add vue-mcp-next
+```
+
 ## ⚠️ 重要前置条件
 
 **使用 Vue MCP Next 之前，必须先安装并启用 Vue DevTools！**
@@ -27,18 +40,7 @@ Vue MCP Next 依赖 Vue DevTools 来访问和操作 Vue 应用的运行时状态
 - 🔍 **内置 Inspector**：集成 MCP Inspector 调试工具
 - 📱 **Vue DevTools 集成**：基于 @vue/devtools-kit
 
-## 📦 安装
 
-```bash
-# 使用 npm
-npm install vue-mcp-next
-
-# 使用 yarn
-yarn add vue-mcp-next
-
-# 使用 pnpm
-pnpm add vue-mcp-next
-```
 
 ## 🚀 快速开始
 
